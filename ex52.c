@@ -75,7 +75,6 @@ void InitializeGame(Tetris* tetris) {
     CreateGrid(tetris);
     // Place the shape.
     PlaceShape(tetris, tetris->x, tetris->y, 0);
-
 }
 // ====================================================================================================================
 // Handles the SIGALRM signal.
