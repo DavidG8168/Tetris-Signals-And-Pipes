@@ -12,14 +12,14 @@ typedef struct tetris_game_board {
     char grid[20][20];
     // The Y-axis position of the shape.
     // Row.
-    int x;
+    int row;
     // The X-axis position of the shape.
     // Column.
-    int y;
+    int col;
     // Used to determine if the shape is horizontal or vertical position.
-    // Vertical - 1 .
-    // - - -
     // Horizontal - 0 .
+    // - - -
+    // Vertical - 1 .
     // -
     // -
     // -
@@ -35,7 +35,7 @@ void CheckKeyAction(int signum);
 void FlipPosition(Tetris* tetris);
 void ShowGrid(Tetris* tetris);
 void ClearShape(Tetris* tetris);
-void PlaceShape(Tetris* tetris, int x, int y, int prevChanged);
+void PlaceShape(Tetris* tetris, int row, int col, int prevChanged);
 // =================================== Main ===========================================================================
 // ====================================================================================================================
 // The main function.
@@ -69,12 +69,13 @@ void InitializeGame(Tetris* tetris) {
     tetris->position = 0;
     // Starting grid location of shape.
     // Middle of top row.
-    tetris->x = 0;
-    tetris->y = 9;
+    tetris->row = 0;
+    tetris->col = 9;
     // Create the grid with '*' characters.
     CreateGrid(tetris);
     // Place the shape.
-    PlaceShape(tetris, tetris->x, tetris->y, 0);
+    PlaceShape(tetris, tetris->row, tetris->col, 0);
+
 }
 // ====================================================================================================================
 // Handles the SIGALRM signal.
@@ -85,7 +86,7 @@ void MoveShape(int signum) {
     // The signal will keep being sent, entering this function and moving the shape down.
     alarm(1);
     // Update the location of the shape on the grid.
-    PlaceShape(&tetris, tetris.x + 1, tetris.y, 0);
+    PlaceShape(&tetris, tetris.row + 1, tetris.col, 0);
     // Show the grid.
     ShowGrid(&tetris);
 }
@@ -99,15 +100,15 @@ void CheckKeyAction(int signum) {
     char key = (char) getchar();
     // Move down.
     if (key == 's') {
-        PlaceShape(&tetris, tetris.x + 1, tetris.y, 0);
+        PlaceShape(&tetris, tetris.row + 1, tetris.col, 0);
     }
     // Move left.
     if (key == 'a') {
-        PlaceShape(&tetris, tetris.x, tetris.y - 1, 0);
+        PlaceShape(&tetris, tetris.row, tetris.col - 1, 0);
     }
     // Move right.
     if (key == 'd') {
-        PlaceShape(&tetris, tetris.x, tetris.y + 1, 0);
+        PlaceShape(&tetris, tetris.row, tetris.col + 1, 0);
     }
     // Flip the position of the shape.
     if (key == 'w') {
@@ -126,17 +127,17 @@ void FlipPosition(Tetris* tetris) {
     // First delete the shape.
     ClearShape(tetris);
     // Save the previous location of the shape.
-    int prevXPos = tetris->x;
-    int prevYPos = tetris->y;
+    int prevRow = tetris->row;
+    int prevCol = tetris->col;
     // If horizontal change to vertical.
     if (tetris->position == 0) {
         // Change to vertical.
         tetris->position = 1;
-        PlaceShape(tetris, prevXPos - 1, prevYPos + 1, 1);
+        PlaceShape(tetris, prevRow - 1, prevCol + 1, 1);
     // If vertical change to horizontal.
     } else  {
-        int x = prevXPos + 1;
-        int y = prevYPos - 1;
+        int x = prevRow + 1;
+        int y = prevCol - 1;
         /* flip from vertical to horizontal will cause the shape to cross the right game border.*/
         if (y + 2 >= 20 - 1) {
             y = 20 - 4;
@@ -189,33 +190,33 @@ void ClearShape(Tetris* tetris) {
     // If horizontal.
     if (tetris->position == 0) {
         // Delete the '-' chars by the X-axis.
-        tetris->grid[tetris->x][tetris->y] = ' ';
-        tetris->grid[tetris->x][tetris->y + 1] = ' ';
-        tetris->grid[tetris->x][tetris->y + 2] = ' ';
+        tetris->grid[tetris->row][tetris->col] = ' ';
+        tetris->grid[tetris->row][tetris->col + 1] = ' ';
+        tetris->grid[tetris->row][tetris->col + 2] = ' ';
     } else {
         // Vertical.
         // Delete the '-' chars by the Y-axis.
-        tetris->grid[tetris->x][tetris->y] = ' ';
-        tetris->grid[tetris->x + 1][tetris->y] = ' ';
-        tetris->grid[tetris->x + 2][tetris->y] = ' ';
+        tetris->grid[tetris->row][tetris->col] = ' ';
+        tetris->grid[tetris->row + 1][tetris->col] = ' ';
+        tetris->grid[tetris->row + 2][tetris->col] = ' ';
     }
 }
 // ====================================================================================================================
 // Move the shape to create the falling animation.
-void PlaceShape(Tetris* tetris, int x, int y, int prevChanged) {
+void PlaceShape(Tetris* tetris, int row, int col, int prevChanged) {
     // Check if not crossing the allowed borders.
     // If horizontal.
     if (tetris->position == 0) {
-        if (y <= 0)
+        if (col <= 0)
             return;
-        if (y + 2 >= 20 -1 )
+        if (col + 2 >= 20 -1 )
             return;
     }
     // If vertical.
     if (tetris->position == 1 ) {
-        if (y <= 0)
+        if (col <= 0)
             return;
-        if (y >= 20 - 1)
+        if (col >= 20 - 1)
             return;
     }
     // Erase previous shape if we didn't flip it before.
@@ -223,25 +224,25 @@ void PlaceShape(Tetris* tetris, int x, int y, int prevChanged) {
         ClearShape(tetris);
     }
     // Set the new position of the shape.
-    tetris->x = x;
-    tetris->y = y;
+    tetris->row = row;
+    tetris->col = col;
     // "Re-Draw" the shape on the grid.
     // If horizontal.
     if (tetris->position == 0) {
-        tetris->grid[x][y] = '-';
-        tetris->grid[x][y + 1] = '-';
-        tetris->grid[x][y + 2] = '-';
+        tetris->grid[row][col] = '-';
+        tetris->grid[row][col + 1] = '-';
+        tetris->grid[row][col + 2] = '-';
         // Once we hit the bottom, re-initialize the tetris game.
-        if (x >= 20 - 1) {
+        if (row >= 20 - 1) {
             InitializeGame(tetris);
         }
     } else {
         // Vertical
-        tetris->grid[x][y] = '-';
-        tetris->grid[x + 1][y] = '-';
-        tetris->grid[x + 2][y] = '-';
+        tetris->grid[row][col] = '-';
+        tetris->grid[row + 1][col] = '-';
+        tetris->grid[row + 2][col] = '-';
         // Once we hit the bottom, re-initialize the tetris game.
-        if (x + 2 >= 20 - 1) {
+        if (row + 2 >= 20 - 1) {
             InitializeGame(tetris);
         }
     }
